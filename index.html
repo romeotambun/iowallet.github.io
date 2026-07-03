@@ -3,25 +3,61 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplikasi GAS PWA</title>
-  <link rel="manifest" href="manifest.json">
+  <title>Aplikasi PWA Saya</title>
+  <style>
+    /* Styling simpel agar ramah di HP */
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    .user-card { background: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    h3 { margin: 0 0 5px 0; color: #333; }
+    p { margin: 0; color: #666; font-size: 12px; word-break: break-all; }
+    button { padding: 10px 20px; background: #4285F4; color: white; border: none; border-radius: 5px; width: 100%; font-size: 16px; margin-bottom: 20px; }
+  </style>
 </head>
 <body>
-  <h1>Aplikasi Mobile-ku</h1>
-  <button id="btnAmbil">Ambil Data dari Sheets</button>
+
+  <h2>Daftar User dari Sheets</h2>
+  <button id="btnAmbil">Muat Data User</button>
+  
+  <!-- Tempat untuk menampilkan data dari Google Sheets -->
+  <div id="konten-user"></div>
 
   <script>
-    // Daftarkan Service Worker agar bisa jadi PWA
+    // Registrasi PWA Service Worker
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .then(() => console.log("PWA Terdaftar!"));
+      navigator.serviceWorker.register('sw.js').then(() => console.log("PWA Ready!"));
     }
 
-    // Contoh nembak data ke GAS
+    // Fungsi mengambil dan menampilkan data
     document.getElementById('btnAmbil').addEventListener('click', () => {
+      const kontenDiv = document.getElementById('konten-user');
+      kontenDiv.innerHTML = "Sedang mengambil data...";
+
+      // GANTI URL DI BAWAH INI DENGAN URL WEB APP GAS KAMU
       fetch('https://script.google.com/macros/s/AKfycbxN0DFjyZnlxkcifZmD5Fs_ZehAGqV4X9Rr4JDroaJEVXK7yViFOBQjlTA7EXIfzWy2qQ/exec')
         .then(res => res.json())
-        .then(data => alert("Data berhasil diambil!"));
+        .then(data => {
+          kontenDiv.innerHTML = ""; // Bersihkan tulisan loading
+          
+          // data[0] adalah Header ("Email", "Password", "SheetId")
+          // Kita mulai looping dari indeks ke-1 (baris data pertama)
+          for (let i = 1; i < data.length; i++) {
+            const email = data[i][0];
+            const sheetId = data[i][2];
+
+            // Buat tampilan kotak (card) untuk tiap user
+            const card = document.createElement('div');
+            card.className = 'user-card';
+            card.innerHTML = `
+              <h3>${email}</h3>
+              <p><strong>Sheet ID:</strong> ${sheetId}</p>
+            `;
+            kontenDiv.appendChild(card);
+          }
+        })
+        .catch(err => {
+          kontenDiv.innerHTML = "Gagal memuat data.";
+          console.error(err);
+        });
     });
   </script>
 </body>
